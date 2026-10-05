@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PC Builder: Hardware Challenge | Grade 7 Interactive Computer Science</title>
+  <meta name="description" content="An interactive 2D PC hardware assembly simulation and puzzle game designed for Grade 7 students. Learn computer parts, functions, assembly, cabling, and boot sequence!">
+  <!-- Google Fonts: Orbitron for futuristic headers & Outfit for modern UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Cyber Dust Canvas Background -->
+  <canvas id="bg-canvas"></canvas>
+
+  <div id="game-app">
+    <!-- ==================== HEADER HUD ==================== -->
+    <header id="game-hud">
+      <div class="hud-left">
+        <div class="logo-badge" id="hud-logo-btn" title="Return to Main Menu">
+          <svg class="logo-icon" viewBox="0 0 24 24" width="22" height="22">
+            <path fill="currentColor" d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zm2 3a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm0 4a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm12-4h-8v6h8V9z"/>
+          </svg>
+          <span class="logo-text">PC BUILDER <span class="badge-tag">G7 LAB</span></span>
+        </div>
+        <div class="hud-chip level-chip" id="hud-level-display">
+          <span class="chip-label">MODE</span>
+          <span class="chip-val" id="current-level-name">Level 1: Explorer</span>
+        </div>
+      </div>
+
+      <div class="hud-center">
+        <!-- Stage / Phase Progress Indicator -->
+        <div class="phase-stepper" id="phase-stepper">
+          <div class="step-item active" id="step-assembly" title="Stage 1: Internal Assembly">
+            <span class="step-num">1</span>
+            <span class="step-name">Assembly</span>
+          </div>
+          <div class="step-line" id="step-line-1"></div>
+          <div class="step-item" id="step-case" title="Stage 2: Close Case">
+            <span class="step-num">2</span>
+            <span class="step-name">Chassis</span>
+          </div>
+          <div class="step-line" id="step-line-2"></div>
+          <div class="step-item" id="step-cables" title="Stage 3: Cable Connections">
+            <span class="step-num">3</span>
+            <span class="step-name">Cabling</span>
+          </div>
+          <div class="step-line" id="step-line-3"></div>
+          <div class="step-item" id="step-power" title="Stage 4: Power On & Boot">
+            <span class="step-num">4</span>
+            <span class="step-name">Power & Boot</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <!-- Progress Bar & Score Counters -->
+        <div class="hud-stat-box score-box">
+          <span class="stat-label">SCORE</span>
+          <span class="stat-value" id="hud-score">0</span>
+        </div>
+
+        <div class="hud-stat-box timer-box" id="hud-timer-container">
+          <span class="stat-label" id="timer-label">TIME</span>
+          <span class="stat-value" id="hud-timer">00:00</span>
+        </div>
+
+        <div class="hud-controls">
+          <button class="icon-btn" id="btn-sound-toggle" title="Toggle Sound (Mute/Unmute)" aria-label="Toggle Sound">
+            <svg id="sound-icon-on" viewBox="0 0 24 24" width="20" height="20">
+              <path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+            <svg id="sound-icon-off" class="hidden" viewBox="0 0 24 24" width="20" height="20">
+              <path fill="currentColor" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+            </svg>
+          </button>
+          <button class="icon-btn" id="btn-encyclopedia" title="Hardware Encyclopedia & Guide" aria-label="Hardware Guide">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="currentColor" d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4zm0 16v-2h12v2H6zm12-4H6V14h12v2z"/>
+            </svg>
+          </button>
+          <button class="icon-btn" id="btn-hint" title="Need a Clue / Hint?" aria-label="Use Hint">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="currentColor" d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-1.3l-.85-.6C7.8 13.16 7 11.18 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 2.18-.8 4.16-2.15 5.1z"/>
+            </svg>
+            <span class="hint-count-badge" id="hint-badge">3</span>
+          </button>
+          <button class="icon-btn" id="btn-restart" title="Restart Current Level" aria-label="Restart Level">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="currentColor" d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== SCREEN 1: TITLE / START SCREEN ==================== -->
+    <section id="screen-title" class="game-screen active">
+      <div class="title-container">
+        <!-- Floating Cyber Lab Elements -->
+        <div class="hero-lab-visual">
+          <div class="hologram-case">
+            <div class="holo-ring holo-ring-1"></div>
+            <div class="holo-ring holo-ring-2"></div>
+            <div class="holo-tower-art">
+              <!-- Animated SVG Motherboard & Case Hero graphic -->
+              <svg viewBox="0 0 220 280" width="200" height="255" class="floating-case-svg">
+                <defs>
+                  <linearGradient id="caseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#141e30"/>
+                    <stop offset="100%" stop-color="#243b55"/>
+                  </linearGradient>
+                  <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#00e5ff"/>
+                    <stop offset="100%" stop-color="#2979ff"/>
+                  </linearGradient>
+                </defs>
+                <rect x="20" y="10" width="180" height="260" rx="14" fill="url(#caseGrad)" stroke="#00e5ff" stroke-width="2.5" opacity="0.95"/>
+                <!-- Glass panel border -->
+                <rect x="30" y="24" width="160" height="232" rx="8" fill="rgba(6, 15, 30, 0.75)" stroke="#2979ff" stroke-width="1.5"/>
+                <!-- Motherboard board -->
+                <rect x="42" y="36" width="136" height="150" rx="4" fill="#0d2838" stroke="#00e5ff" stroke-width="1"/>
+                <!-- Circuit traces -->
+                <path d="M50 50 h25 v30 h20 M140 50 h-20 v40 h-10 M60 140 v-20 h40 M160 160 h-30 v-20" stroke="#00e5ff" stroke-width="1" fill="none" opacity="0.6"/>
+                <!-- CPU Socket -->
+                <rect x="75" y="55" width="40" height="40" rx="3" fill="#1b3d54" stroke="#ffab00" stroke-width="1.5"/>
+                <rect x="85" y="65" width="20" height="20" rx="2" fill="#2a5a78"/>
+                <!-- RAM Slots -->
+                <rect x="125" y="48" width="6" height="54" rx="1" fill="#00e676" opacity="0.8"/>
+                <rect x="135" y="48" width="6" height="54" rx="1" fill="#00e676" opacity="0.8"/>
+                <!-- PCIe GPU Slot -->
+                <rect x="52" y="125" width="85" height="12" rx="2" fill="#ff1744" opacity="0.8"/>
+                <!-- PSU Basement -->
+                <rect x="42" y="195" width="136" height="50" rx="4" fill="#091422" stroke="#2979ff" stroke-width="1"/>
+                <circle cx="75" cy="220" r="14" fill="#132a40" stroke="#00e5ff" stroke-width="1.5"/>
+                <path d="M75 210 v20 M65 220 h20" stroke="#00e5ff" stroke-width="2"/>
+                <text x="105" y="224" fill="#8cb8ff" font-family="'Orbitron', sans-serif" font-size="9" font-weight="bold">850W GOLD</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="title-content">
+          <div class="grade-pill">GRADE 7 • COMPUTER SCIENCE LAB</div>
+          <h1 class="main-title">
+            <span class="title-cyber">PC BUILDER</span>
+            <span class="title-sub">HARDWARE CHALLENGE</span>
+          </h1>
+          <p class="tagline">Build it. Connect it. Power it up!</p>
+          <p class="title-desc">
+            Step into the computer hardware workshop. Learn how the CPU, RAM, GPU, Storage, and Power Supply come together to build a super-fast gaming PC!
+          </p>
+
+          <!-- Level Difficulty Selector Cards -->
+          <div class="level-select-grid two-levels">
+            <div class="level-card active" data-level="1">
+              <div class="level-badge">LEVEL 1</div>
+              <div class="level-title">Hardware Explorer</div>
+              <div class="level-desc">Guided mission clues, fundamental hardware learning, and core assembly.</div>
+              <div class="level-meta"><span class="star-rating">★★★</span> Guided Mode</div>
+            </div>
+            <div class="level-card" data-level="2">
+              <div class="level-badge">LEVEL 2</div>
+              <div class="level-title">PC Builder</div>
+              <div class="level-desc">Identify internal parts vs external peripherals, connect cables, and power up!</div>
+              <div class="level-meta"><span class="star-rating">★★☆</span> Complete Builder</div>
+            </div>
+          </div>
+
+          <div class="title-actions">
+            <button class="btn btn-primary" id="btn-start-game">
+              <span class="btn-glow"></span>
+              <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+              <span>ENTER WORKSHOP</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-how-to-play">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+              <span>HOW TO PLAY</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-hardware-guide-title">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+              <span>PARTS GUIDE</span>
+            </button>
+          </div>
+
+          <!-- Local Best Score Display -->
+          <div class="title-footer-stats">
+            <div class="best-stat">BEST SCORE: <span id="title-best-score">0</span> PTS</div>
+            <div class="best-stat">STARS EARNED: <span id="title-stars">0 / 9</span> ★</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SCREEN 2: STORY & INTRO DIALOGUE ==================== -->
+    <section id="screen-intro" class="game-screen">
+      <div class="story-overlay">
+        <div class="workshop-backdrop">
+          <div class="lab-shelves"></div>
+          <div class="lab-workbench"></div>
+        </div>
+
+        <div class="character-dialogue-wrapper">
+          <!-- Animated Student Character "Alex" -->
+          <div class="character-avatar-container">
+            <div class="character-glow"></div>
+            <div class="character-svg-art" id="character-art">
+              <!-- High Quality SVG Illustrated Student Intern Character -->
+              <svg viewBox="0 0 160 220" width="160" height="220" class="alex-character-svg">
+                <!-- Hair Back -->
+                <path d="M40 70 Q30 30 80 20 Q130 30 120 70 Q135 90 125 110 Q115 65 115 60 Q80 50 45 60 Z" fill="#2d1b0d"/>
+                <!-- Neck -->
+                <rect x="70" y="98" width="20" height="25" rx="3" fill="#f5c29b"/>
+                <!-- Lab Coat Collar & Shirt -->
+                <path d="M45 120 L80 145 L115 120 L135 220 L25 220 Z" fill="#1b2a4a"/>
+                <!-- Lab Tech Vest / Hoodie -->
+                <path d="M50 120 L80 145 L110 120 L120 220 L40 220 Z" fill="#00e5ff" opacity="0.85"/>
+                <path d="M72 140 L88 140 L88 220 L72 220 Z" fill="#101a2e"/>
+                <!-- ID Badge -->
+                <rect x="52" y="160" width="18" height="24" rx="2" fill="#ffffff" stroke="#2979ff" stroke-width="1"/>
+                <rect x="55" y="164" width="12" height="6" fill="#00e5ff"/>
+                <line x1="55" y1="174" x2="67" y2="174" stroke="#555" stroke-width="1.5"/>
+                <!-- Head -->
+                <ellipse cx="80" cy="72" rx="36" ry="42" fill="#fcd6b6"/>
+                <!-- Hair Front & Bangs -->
+                <path d="M45 55 Q70 25 115 45 Q125 65 118 78 Q110 50 80 48 Q55 50 45 55 Z" fill="#4a2e18"/>
+                <path d="M44 56 Q35 70 38 85 Q44 75 48 65 Z" fill="#4a2e18"/>
+                <!-- Safety Goggles / Smart Glasses -->
+                <rect x="48" y="58" width="28" height="20" rx="5" fill="rgba(0, 229, 255, 0.2)" stroke="#00e5ff" stroke-width="2"/>
+                <rect x="84" y="58" width="28" height="20" rx="5" fill="rgba(0, 229, 255, 0.2)" stroke="#00e5ff" stroke-width="2"/>
+                <line x1="76" y1="68" x2="84" y2="68" stroke="#00e5ff" stroke-width="2.5"/>
+                <!-- Eyes behind glasses -->
+                <circle cx="62" cy="68" r="4.5" fill="#1b2a4a"/>
+                <circle cx="64" cy="66" r="1.5" fill="#ffffff"/>
+                <circle cx="98" cy="68" r="4.5" fill="#1b2a4a"/>
+                <circle cx="100" cy="66" r="1.5" fill="#ffffff"/>
+                <!-- Eyebrows -->
+                <path d="M52 53 Q62 48 72 53" stroke="#2d1b0d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <path d="M88 53 Q98 48 108 53" stroke="#2d1b0d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <!-- Cheerful Smile -->
+                <path id="alex-mouth" d="M68 94 Q80 104 92 94" stroke="#c45d43" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <!-- Cheeks -->
+                <circle cx="54" cy="84" r="5" fill="#ff9999" opacity="0.45"/>
+                <circle cx="106" cy="84" r="5" fill="#ff9999" opacity="0.45"/>
+                <!-- Tech Headset -->
+                <path d="M42 62 Q36 68 40 82" stroke="#2979ff" stroke-width="4" fill="none"/>
+                <rect x="36" y="70" width="8" height="15" rx="3" fill="#00e5ff"/>
+                <path d="M38 82 Q42 102 62 102" stroke="#2979ff" stroke-width="2" fill="none"/>
+                <circle cx="63" cy="102" r="3" fill="#00e676"/>
+              </svg>
+            </div>
+            <div class="character-nameplate">
+              <span class="char-role">LAB INSTRUCTOR</span>
+              <span class="char-name">Alex Rivera</span>
+            </div>
+          </div>
+
+          <!-- Speech Dialogue Card -->
+          <div class="dialogue-card">
+            <div class="dialogue-header">
+              <div class="terminal-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <span class="dialogue-title">HARDWARE WORKSHOP PROTOCOL</span>
+            </div>
+            <div class="dialogue-body">
+              <p id="dialogue-text" class="typewriter-text">
+                "Hi there! Welcome to the Computer Hardware Lab. I have all the components ready for this high-performance gaming PC, but I need a sharp engineer to identify where each component belongs. Let's assemble it, plug in the cables, and boot it up!"
+              </p>
+            </div>
+            <div class="dialogue-footer">
+              <button class="btn btn-primary btn-sm" id="btn-dialogue-continue">
+                <span>LET'S BUILD IT!</span>
+                <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SCREEN 3: MAIN WORKSHOP GAMEPLAY ==================== -->
+    <section id="screen-gameplay" class="game-screen">
+      <!-- Mission Clue Banner (Top Bar of Workshop) -->
+      <div class="mission-clue-bar" id="mission-clue-bar">
+        <div class="mission-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28">
+            <path fill="#00e5ff" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z"/>
+          </svg>
+        </div>
+        <div class="mission-info">
+          <div class="mission-tag" id="mission-step-tag">MISSION CLUE: PART 1 OF 6</div>
+          <div class="mission-riddle" id="mission-clue-text">
+            "I am the central brain of the computer. I process instructions, perform calculations, and manage system operations. Which component am I?"
+          </div>
+        </div>
+        <div class="mission-actions">
+          <button class="inspect-toggle-btn" id="btn-toggle-tray-inspect" title="Click a part in the tray to inspect its specifications">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <span>Part Inspector</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Interactive Workshop Area -->
+      <div class="workshop-main-grid">
+        <!-- ================= LEFT: HARDWARE PARTS TRAY ================= -->
+        <aside class="parts-tray-panel" id="parts-tray-panel">
+          <div class="panel-header">
+            <div class="header-title">
+              <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+              <span>PARTS TRAY</span>
+            </div>
+            <span class="items-count-tag" id="tray-count-tag">8 Items</span>
+          </div>
+
+          <p class="tray-instructions">Drag parts to their matching socket in the chassis or tap to inspect.</p>
+
+          <div class="parts-scroll-grid" id="parts-tray-container">
+            <!-- Dynamic hardware parts rendered here via JavaScript -->
+          </div>
+        </aside>
+
+        <!-- ================= CENTER: INTERACTIVE WORKBENCH STAGE ================= -->
+        <main class="workbench-stage" id="workbench-stage">
+          <!-- STAGE VIEW A: INTERNAL ASSEMBLY (Motherboard Inside Open Case) -->
+          <div class="stage-view active" id="view-assembly">
+            <div class="pc-chassis-container">
+              <!-- PC Chassis Frame -->
+              <div class="chassis-outer-frame">
+                <div class="chassis-glass-highlight"></div>
+
+                <!-- Top Exhaust & Fans -->
+                <div class="chassis-top-mesh">
+                  <div class="chassis-fan fan-top" id="chassis-fan-top">
+                    <div class="fan-blades"></div>
+                    <div class="fan-hub"></div>
+                  </div>
+                </div>
+
+                <!-- Rear Exhaust Fan -->
+                <div class="chassis-rear-mesh">
+                  <div class="chassis-fan fan-rear" id="chassis-fan-rear">
+                    <div class="fan-blades"></div>
+                    <div class="fan-hub"></div>
+                  </div>
+                </div>
+
+                <!-- MOTHERBOARD SVG / INTERACTIVE CANVAS -->
+                <div class="motherboard-board" id="motherboard-board">
+                  <!-- Circuit Traces & PCB details (SVG layer) -->
+                  <svg class="mobo-pcb-traces" viewBox="0 0 540 420" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="pcbGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#0b1726"/>
+                        <stop offset="50%" stop-color="#0f2238"/>
+                        <stop offset="100%" stop-color="#09131f"/>
+                      </linearGradient>
+                      <pattern id="pcbGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(0, 229, 255, 0.05)" stroke-width="0.8"/>
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#pcbGrad)"/>
+                    <rect width="100%" height="100%" fill="url(#pcbGrid)"/>
+                    <!-- Traces -->
+                    <g stroke="#00e5ff" stroke-width="1.2" opacity="0.35" fill="none">
+                      <path d="M 120 70 L 220 70 L 220 140"/>
+                      <path d="M 140 100 L 220 100"/>
+                      <path d="M 280 80 L 370 80 L 370 110"/>
+                      <path d="M 280 120 L 370 120"/>
+                      <path d="M 200 240 L 200 290 L 120 290"/>
+                      <path d="M 250 240 L 250 330 L 400 330"/>
+                      <circle cx="220" cy="70" r="2.5" fill="#00e5ff"/>
+                      <circle cx="370" cy="80" r="2.5" fill="#00e5ff"/>
+                      <circle cx="200" cy="290" r="2.5" fill="#00e5ff"/>
+                    </g>
+                    <!-- Capacitors & VRM Heatsinks -->
+                    <g fill="#1a3550" stroke="#00e5ff" stroke-width="1">
+                      <rect x="120" y="110" width="30" height="75" rx="3"/>
+                      <rect x="160" y="70" width="80" height="25" rx="3"/>
+                      <!-- Capacitors -->
+                      <circle cx="135" cy="200" r="6" fill="#30475e" stroke="#2979ff"/>
+                      <circle cx="135" cy="220" r="6" fill="#30475e" stroke="#2979ff"/>
+                      <circle cx="135" cy="240" r="6" fill="#30475e" stroke="#2979ff"/>
+                      <circle cx="135" cy="260" r="6" fill="#30475e" stroke="#2979ff"/>
+                    </g>
+                    <!-- Chipset Heatsink -->
+                    <rect x="360" y="240" width="65" height="60" rx="6" fill="#14283d" stroke="#2979ff" stroke-width="1.5"/>
+                    <text x="372" y="275" fill="#00e5ff" font-family="'Orbitron', sans-serif" font-size="9" font-weight="bold">Z790 CHIP</text>
+                  </svg>
+
+                  <!-- 1. CPU SOCKET DROP ZONE -->
+                  <div class="drop-zone" id="zone-cpu" data-accepts="cpu" title="CPU Socket (LGA 1700)">
+                    <div class="zone-outline"></div>
+                    <div class="zone-pin-grid"></div>
+                    <div class="zone-lever"></div>
+                    <div class="zone-tag">CPU SOCKET</div>
+                    <div class="installed-slot" id="slot-cpu"></div>
+                  </div>
+
+                  <!-- 2. CPU COOLER DROP ZONE (Over the CPU) -->
+                  <div class="drop-zone" id="zone-cooler" data-accepts="cooler" title="CPU Cooler Fan Mount">
+                    <div class="zone-outline dashed"></div>
+                    <div class="cooler-mount-bracket"></div>
+                    <div class="zone-tag">COOLER MOUNT</div>
+                    <div class="installed-slot" id="slot-cooler"></div>
+                  </div>
+
+                  <!-- 3. RAM DIMM SLOTS DROP ZONE -->
+                  <div class="drop-zone" id="zone-ram" data-accepts="ram" title="RAM Memory Slots (DIMM DDR5)">
+                    <div class="zone-outline"></div>
+                    <div class="dimm-slot-bars">
+                      <span class="dimm-bar dimm-1"></span>
+                      <span class="dimm-bar dimm-2"></span>
+                    </div>
+                    <div class="zone-tag">RAM SLOTS</div>
+                    <div class="installed-slot" id="slot-ram"></div>
+                  </div>
+
+                  <!-- 4. GPU PCIE X16 EXPANSION SLOT DROP ZONE -->
+                  <div class="drop-zone" id="zone-gpu" data-accepts="gpu" title="PCIe 5.0 x16 Graphics Slot">
+                    <div class="zone-outline"></div>
+                    <div class="pcie-slot-bar">
+                      <span class="pcie-latch"></span>
+                    </div>
+                    <div class="zone-tag">PCIe x16 GPU SLOT</div>
+                    <div class="installed-slot" id="slot-gpu"></div>
+                  </div>
+
+                  <!-- 5. SSD / HDD STORAGE BAY DROP ZONE -->
+                  <div class="drop-zone" id="zone-storage" data-accepts="storage" title="M.2 NVMe SSD / SATA Drive Bay">
+                    <div class="zone-outline"></div>
+                    <div class="m2-connector-graphic"></div>
+                    <div class="zone-tag">M.2 NVMe / SSD BAY</div>
+                    <div class="installed-slot" id="slot-storage"></div>
+                  </div>
+                </div>
+
+                <!-- 6. PSU BASEMENT SHROUD & DROP ZONE -->
+                <div class="psu-shroud-bay">
+                  <div class="psu-shroud-title">POWER SUPPLY UNIT SHROUD</div>
+                  <div class="drop-zone" id="zone-psu" data-accepts="psu" title="Power Supply Bay (ATX 850W)">
+                    <div class="zone-outline"></div>
+                    <div class="psu-bracket-graphic"></div>
+                    <div class="zone-tag">PSU BAY (AC POWER)</div>
+                    <div class="installed-slot" id="slot-psu"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAGE VIEW B: CASE CLOSING -->
+          <div class="stage-view" id="view-case-close">
+            <div class="case-closing-workbench">
+              <div class="case-close-instruction">
+                <h3>STAGE 2: CLOSE CHASSIS</h3>
+                <p>All internal components are secured! Slide the tempered glass side panel into place and lock the thumb screws.</p>
+              </div>
+
+              <div class="case-closing-animation-zone">
+                <div class="pc-chassis-assembled-base" id="case-base-preview">
+                  <div class="case-inner-glow"></div>
+                  <!-- Tempered Glass Side Panel to drag or click -->
+                  <div class="glass-side-panel" id="draggable-side-panel">
+                    <div class="glass-reflection"></div>
+                    <div class="glass-border-rim"></div>
+                    <div class="thumb-screw screw-tl"></div>
+                    <div class="thumb-screw screw-tr"></div>
+                    <div class="thumb-screw screw-bl"></div>
+                    <div class="thumb-screw screw-br"></div>
+                    <div class="panel-handle">
+                      <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                      <span>SLIDE & LOCK PANEL</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="case-close-actions">
+                <button class="btn btn-primary" id="btn-snap-case-close">
+                  <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                  <span>INSTALL SIDE PANEL</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAGE VIEW C: REAR & EXTERNAL CABLING PUZZLE -->
+          <div class="stage-view" id="view-cabling">
+            <div class="cabling-workbench">
+              <div class="cabling-instruction-banner">
+                <h3>STAGE 3: CONNECT REAR CABLES</h3>
+                <p>Plug in the essential cables to connect power, display, and peripherals. Drag each plug to the correct port!</p>
+              </div>
+
+              <div class="cabling-arena">
+                <!-- Cables Dock / Rack -->
+                <div class="cables-dock" id="cables-dock">
+                  <div class="dock-title">AVAILABLE CABLES</div>
+
+                  <!-- Cable 1: AC Power Cord -->
+                  <div class="cable-plug-item" id="cable-power" draggable="true" data-cable-type="cable-power">
+                    <div class="plug-graphic plug-power-3prong">
+                      <div class="prong prong-1"></div>
+                      <div class="prong prong-2"></div>
+                      <div class="prong prong-3"></div>
+                    </div>
+                    <div class="cable-info">
+                      <span class="cable-title">Power Cord (IEC)</span>
+                      <span class="cable-sub">AC Wall Power (230V/115V)</span>
+                    </div>
+                  </div>
+
+                  <!-- Cable 2: HDMI / DisplayPort Cable -->
+                  <div class="cable-plug-item" id="cable-display" draggable="true" data-cable-type="cable-display">
+                    <div class="plug-graphic plug-hdmi">
+                      <span class="hdmi-label">HDMI</span>
+                    </div>
+                    <div class="cable-info">
+                      <span class="cable-title">Display Cable (HDMI/DP)</span>
+                      <span class="cable-sub">Connects GPU to Gaming Monitor</span>
+                    </div>
+                  </div>
+
+                  <!-- Cable 3: Keyboard USB Cable -->
+                  <div class="cable-plug-item" id="cable-keyboard" draggable="true" data-cable-type="cable-keyboard">
+                    <div class="plug-graphic plug-usb">
+                      <span class="usb-icon">⌨ USB</span>
+                    </div>
+                    <div class="cable-info">
+                      <span class="cable-title">Keyboard USB Cable</span>
+                      <span class="cable-sub">Input Device Connection</span>
+                    </div>
+                  </div>
+
+                  <!-- Cable 4: Mouse USB Cable -->
+                  <div class="cable-plug-item" id="cable-mouse" draggable="true" data-cable-type="cable-mouse">
+                    <div class="plug-graphic plug-usb">
+                      <span class="usb-icon">🖱 USB</span>
+                    </div>
+                    <div class="cable-info">
+                      <span class="cable-title">Mouse USB Cable</span>
+                      <span class="cable-sub">Pointer Control Connection</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- PC Rear I/O Panel & GPU Ports -->
+                <div class="pc-rear-io-panel">
+                  <div class="io-shield-section mobo-io">
+                    <div class="io-header">MOTHERBOARD I/O SHIELD</div>
+                    <div class="io-ports-cluster">
+                      <div class="port-slot" id="port-usb-1" data-accepts="usb" title="USB 3.2 Port (Connect Keyboard or Mouse)">
+                        <div class="port-receptacle usb-receptacle"></div>
+                        <span class="port-name">USB Port 1</span>
+                        <span class="port-status" id="status-port-usb-1">UNCONNECTED</span>
+                      </div>
+                      <div class="port-slot" id="port-usb-2" data-accepts="usb" title="USB 3.2 Port (Connect Keyboard or Mouse)">
+                        <div class="port-receptacle usb-receptacle"></div>
+                        <span class="port-name">USB Port 2</span>
+                        <span class="port-status" id="status-port-usb-2">UNCONNECTED</span>
+                      </div>
+                      <div class="port-slot mobo-display-disabled" title="Motherboard Video (Disabled when GPU installed)">
+                        <div class="port-receptacle hdmi-receptacle"></div>
+                        <span class="port-name">iGPU HDMI (OFF)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Dedicated GPU Video Output Port -->
+                  <div class="io-shield-section gpu-io">
+                    <div class="io-header">DISCRETE GPU BRACKET</div>
+                    <div class="port-slot" id="port-gpu-display" data-accepts="cable-display" title="GPU Dedicated HDMI / DisplayPort">
+                      <div class="port-receptacle hdmi-receptacle gpu-active-port"></div>
+                      <span class="port-name">GPU HDMI PORT</span>
+                      <span class="port-status" id="status-port-gpu">UNCONNECTED</span>
+                    </div>
+                  </div>
+
+                  <!-- PSU AC Inlet Receptacle -->
+                  <div class="io-shield-section psu-io">
+                    <div class="io-header">PSU POWER SOCKET</div>
+                    <div class="port-slot" id="port-psu-power" data-accepts="cable-power" title="PSU 3-Prong AC Power Inlet">
+                      <div class="port-receptacle psu-receptacle">
+                        <span class="pin-hole"></span><span class="pin-hole"></span><span class="pin-hole"></span>
+                      </div>
+                      <span class="port-name">AC POWER INLET</span>
+                      <span class="port-status" id="status-port-power">UNCONNECTED</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAGE VIEW D: POWER-ON & OS BOOT SEQUENCE -->
+          <div class="stage-view" id="view-boot">
+            <div class="boot-workbench">
+              <!-- Physical Hardware Setup Simulation -->
+              <div class="power-station-wrapper">
+                <!-- PC Tower Front & Rear Controls -->
+                <div class="pc-tower-unit" id="pc-tower-unit">
+                  <div class="tower-rgb-accent"></div>
+                  <!-- Front Panel Power Button -->
+                  <div class="front-power-panel">
+                    <button class="pc-power-btn" id="btn-pc-power" disabled title="Click to Power On the PC">
+                      <svg viewBox="0 0 24 24" width="28" height="28">
+                        <path fill="currentColor" d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A7.92 7.92 0 0 1 20 12c0 4.41-3.59 8-8 8s-8-3.59-8-8c0-2.52 1.17-4.77 3-6.24L5.58 4.34A9.932 9.932 0 0 0 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-2.84-1.19-5.4-3.17-6.83z"/>
+                      </svg>
+                    </button>
+                    <span class="power-btn-label">POWER SWITCH</span>
+                    <div class="power-led" id="power-led-indicator"></div>
+                  </div>
+
+                  <!-- Visible Internal Fans with dynamic RGB rotation -->
+                  <div class="tower-window-preview">
+                    <div class="case-fan fan-front-1" id="boot-fan-1"><div class="blades"></div></div>
+                    <div class="case-fan fan-front-2" id="boot-fan-2"><div class="blades"></div></div>
+                    <div class="ram-rgb-glow" id="boot-ram-glow"></div>
+                  </div>
+
+                  <!-- PSU Rear Rocker Switch -->
+                  <div class="psu-rocker-module">
+                    <div class="rocker-label">PSU MASTER ROCKER</div>
+                    <button class="rocker-switch" id="btn-psu-switch" title="Flip PSU Master Switch (I = ON / O = OFF)">
+                      <div class="rocker-plate">
+                        <span class="rocker-i">I</span>
+                        <span class="rocker-o">O</span>
+                      </div>
+                    </button>
+                    <span class="psu-status-text" id="psu-switch-status">STATUS: OFF [O]</span>
+                  </div>
+                </div>
+
+                <!-- Gaming Monitor & Boot Screen Output -->
+                <div class="monitor-setup">
+                  <div class="monitor-bezel">
+                    <div class="monitor-brand">
+                      <span>CYBERSYNC 165Hz</span>
+                      <div class="monitor-power-led" id="monitor-power-led" title="Monitor Status LED (OFF)"></div>
+                    </div>
+                    <div class="monitor-screen-display" id="monitor-screen">
+                      <!-- 0. Screen State: 100% Powered OFF (Pitch Black) -->
+                      <div class="screen-state screen-off active" id="state-screen-off">
+                        <div class="screen-off-glass"></div>
+                      </div>
+
+                      <!-- 1. Screen State: BIOS POST Sequence (Starts when PC Power Button is pressed) -->
+                      <div class="screen-state screen-bios" id="state-screen-bios">
+                        <div class="bios-header">
+                          <span class="bios-logo">CYBER-BIOS v4.82 (UEFI x64)</span>
+                          <span class="bios-date">POST INITIALIZATION OK</span>
+                        </div>
+                        <div class="bios-log" id="bios-log-lines">
+                          <!-- Terminal lines typed automatically -->
+                        </div>
+                      </div>
+
+                      <!-- 2. Screen State: OS Booting Spinner -->
+                      <div class="screen-state screen-os-load" id="state-screen-os-load">
+                        <div class="os-logo-badge">
+                          <svg viewBox="0 0 24 24" width="48" height="48">
+                            <path fill="#00e5ff" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                          </svg>
+                          <h2>QUANTUM OS</h2>
+                        </div>
+                        <div class="cyber-spinner"></div>
+                        <p>Loading System Kernel & Drivers...</p>
+                      </div>
+
+                      <!-- 4. Screen State: Desktop Loaded & System Specs -->
+                      <div class="screen-state screen-os-desktop" id="state-screen-os-desktop">
+                        <div class="desktop-wallpaper">
+                          <div class="desktop-taskbar">
+                            <div class="start-btn">❖ Quantum</div>
+                            <div class="system-time">10:42 AM</div>
+                          </div>
+                          <div class="system-specs-window">
+                            <div class="win-header">
+                              <span>🖥 SYSTEM DIAGNOSTICS: 100% HEALTHY</span>
+                              <span class="win-controls">_ □ ✕</span>
+                            </div>
+                            <div class="win-body">
+                              <div class="spec-row">
+                                <span class="spec-k">CPU:</span>
+                                <span class="spec-v">8-Core High-Speed Processor @ 4.8GHz (100% Verified)</span>
+                              </div>
+                              <div class="spec-row">
+                                <span class="spec-k">Memory:</span>
+                                <span class="spec-v">16GB DDR5 High-Speed Dual-Channel RAM</span>
+                              </div>
+                              <div class="spec-row">
+                                <span class="spec-k">Graphics:</span>
+                                <span class="spec-v">PCIe Dedicated GPU (DirectX 12 / Vulkan Ready)</span>
+                              </div>
+                              <div class="spec-row">
+                                <span class="spec-k">Storage:</span>
+                                <span class="spec-v">1TB NVMe PCIe 4.0 SSD (Read: 7000 MB/s)</span>
+                              </div>
+                              <div class="spec-row">
+                                <span class="spec-k">Power:</span>
+                                <span class="spec-v">850W Gold PSU • Stable 12V Rails</span>
+                              </div>
+                              <div class="success-banner">
+                                SYSTEM BOOT SUCCESSFUL! READY FOR GAMING & SCIENCE PROJECTS!
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Monitor Stand -->
+                  <div class="monitor-neck"></div>
+                  <div class="monitor-base-plate"></div>
+                </div>
+              </div>
+
+              <!-- Startup Sequence Guide Box -->
+              <div class="boot-steps-guide">
+                <div class="guide-step" id="g-step-1">
+                  <span class="g-num">1</span>
+                  <span class="g-text">Flip PSU Switch to ON ( I )</span>
+                </div>
+                <div class="guide-arrow">➔</div>
+                <div class="guide-step" id="g-step-2">
+                  <span class="g-num">2</span>
+                  <span class="g-text">Press PC Power Button</span>
+                </div>
+                <div class="guide-arrow">➔</div>
+                <div class="guide-step" id="g-step-3">
+                  <span class="g-num">3</span>
+                  <span class="g-text">Watch BIOS POST & OS Boot</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- ================= RIGHT: HARDWARE COMPONENT INSPECTION & MISSION HELPER ================= -->
+        <aside class="hardware-info-sidebar" id="hardware-sidebar">
+          <div class="panel-header">
+            <div class="header-title">
+              <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+              <span>INSPECTION LAB</span>
+            </div>
+          </div>
+
+          <div class="inspector-card" id="inspector-card">
+            <div class="inspector-preview" id="inspector-preview-box">
+              <div class="empty-preview-text">Select or drag any component to inspect its architecture, pins, and Grade 7 science explanation!</div>
+            </div>
+            <div class="inspector-details" id="inspector-details">
+              <h4 class="part-name" id="inspect-name">No Part Selected</h4>
+              <div class="part-type-badge" id="inspect-type">STANDBY</div>
+              <p class="part-function-desc" id="inspect-desc">Click any hardware part from the tray to view its real-world function, safety rules, and why a computer needs it.</p>
+              
+              <div class="part-specs-table" id="inspect-specs">
+                <!-- Dynamic key-value specs -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Installed Checklist Mini Card -->
+          <div class="installed-checklist-box">
+            <div class="checklist-header">
+              <span>ASSEMBLY CHECKLIST</span>
+              <span id="checklist-progress-text">0 / 6</span>
+            </div>
+            <ul class="checklist-items" id="checklist-ul">
+              <li class="check-item" data-part="cpu"><span class="check-circle"></span> CPU (Processor)</li>
+              <li class="check-item" data-part="ram"><span class="check-circle"></span> RAM (Memory)</li>
+              <li class="check-item" data-part="cooler"><span class="check-circle"></span> CPU Cooler Fan</li>
+              <li class="check-item" data-part="storage"><span class="check-circle"></span> SSD Storage</li>
+              <li class="check-item" data-part="gpu"><span class="check-circle"></span> GPU (Graphics Card)</li>
+              <li class="check-item" data-part="psu"><span class="check-circle"></span> Power Supply (PSU)</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ==================== SCREEN 4: VICTORY & SUMMARY ==================== -->
+    <section id="screen-victory" class="game-screen">
+      <div class="victory-container">
+        <div class="victory-card">
+          <div class="victory-banner">
+            <div class="trophy-glow"></div>
+            <div class="trophy-icon">🏆</div>
+            <h2 class="victory-title">PC BUILD COMPLETED!</h2>
+            <p class="victory-sub">System Diagnostics 100% Operational • Operating System Booted!</p>
+          </div>
+
+          <div class="victory-stats-grid">
+            <div class="v-stat-card">
+              <span class="v-label">FINAL SCORE</span>
+              <span class="v-val highlight" id="v-score">1000</span>
+            </div>
+            <div class="v-stat-card">
+              <span class="v-label">TIME TAKEN</span>
+              <span class="v-val" id="v-time">02:15</span>
+            </div>
+            <div class="v-stat-card">
+              <span class="v-label">ACCURACY</span>
+              <span class="v-val" id="v-accuracy">100%</span>
+            </div>
+            <div class="v-stat-card">
+              <span class="v-label">STAR RATING</span>
+              <span class="v-val star-gold" id="v-stars">★★★</span>
+            </div>
+          </div>
+
+          <!-- Educational Hardware Summary Cards -->
+          <div class="educational-summary-section">
+            <h3 class="summary-title">🎓 What You Mastered Today:</h3>
+            <div class="summary-tags-grid">
+              <div class="summary-chip">
+                <strong>CPU:</strong> Central brain executing instructions
+              </div>
+              <div class="summary-chip">
+                <strong>RAM:</strong> Ultra-fast short-term memory
+              </div>
+              <div class="summary-chip">
+                <strong>SSD:</strong> Non-volatile long-term storage
+              </div>
+              <div class="summary-chip">
+                <strong>GPU:</strong> High-speed 3D rendering processor
+              </div>
+              <div class="summary-chip">
+                <strong>PSU:</strong> Converts AC wall power to clean DC voltages
+              </div>
+              <div class="summary-chip">
+                <strong>Cooler:</strong> Dissipates thermal energy from CPU
+              </div>
+            </div>
+          </div>
+
+          <div class="victory-actions">
+            <button class="btn btn-primary" id="btn-next-level">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+              <span>NEXT DIFFICULTY LEVEL</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-replay-level">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+              <span>REPLAY LEVEL</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-victory-encyclopedia">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4zm0 16v-2h12v2H6zm12-4H6V14h12v2z"/></svg>
+              <span>HARDWARE ENCYCLOPEDIA</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-victory-menu">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              <span>MAIN MENU</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== MODAL 1: HOW TO PLAY ==================== -->
+    <div class="game-modal" id="modal-how-to-play">
+      <div class="modal-backdrop"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path fill="#00e5ff" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z"/></svg>
+            <span>HOW TO PLAY: PC HARDWARE CHALLENGE</span>
+          </div>
+          <button class="modal-close-btn" id="btn-close-how-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="tutorial-grid">
+            <div class="tut-card">
+              <div class="tut-num">1</div>
+              <h4>Read Mission Clues</h4>
+              <p>Analyze the hardware riddle in the top mission bar describing the function of each computer part.</p>
+            </div>
+            <div class="tut-card">
+              <div class="tut-num">2</div>
+              <h4>Drag & Drop to Sockets</h4>
+              <p>Drag the matching component from the tray to its correct slot on the motherboard or chassis.</p>
+            </div>
+            <div class="tut-card">
+              <div class="tut-num">3</div>
+              <h4>Watch Out For Distractors!</h4>
+              <p>Items like Keyboards, Mice, and Speakers are external peripherals—not internal hardware parts!</p>
+            </div>
+            <div class="tut-card">
+              <div class="tut-num">4</div>
+              <h4>Close Case & Connect Cables</h4>
+              <p>Lock the glass side panel, plug HDMI into the GPU, USB for mouse/keyboard, and 3-prong AC power into the PSU.</p>
+            </div>
+            <div class="tut-card">
+              <div class="tut-num">5</div>
+              <h4>Master the Boot Sequence</h4>
+              <p>Flip the PSU Master Switch to ON [ I ], then press the front PC Power Button to boot the operating system!</p>
+            </div>
+            <div class="tut-card">
+              <div class="tut-num">6</div>
+              <h4>Inspect & Learn</h4>
+              <p>Click any part to inspect detailed architecture, real-world analogies, and Grade 7 curriculum facts.</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="btn-how-got-it">GOT IT, LET'S PLAY!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL 2: HARDWARE ENCYCLOPEDIA ==================== -->
+    <div class="game-modal" id="modal-encyclopedia">
+      <div class="modal-backdrop"></div>
+      <div class="modal-dialog modal-lg">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path fill="#00e5ff" d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4zm0 16v-2h12v2H6zm12-4H6V14h12v2z"/></svg>
+            <span>GRADE 7 COMPUTER HARDWARE ENCYCLOPEDIA</span>
+          </div>
+          <button class="modal-close-btn" id="btn-close-encyclopedia-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="encyclopedia-tabs" id="encyclopedia-tabs">
+            <button class="ency-tab active" data-tab="cpu">CPU (Processor)</button>
+            <button class="ency-tab" data-tab="ram">RAM (Memory)</button>
+            <button class="ency-tab" data-tab="storage">SSD vs HDD</button>
+            <button class="ency-tab" data-tab="gpu">GPU (Graphics)</button>
+            <button class="ency-tab" data-tab="psu">Power Supply</button>
+            <button class="ency-tab" data-tab="cooler">Cooling System</button>
+            <button class="ency-tab" data-tab="motherboard">Motherboard</button>
+          </div>
+          <div class="encyclopedia-content-pane" id="encyclopedia-content">
+            <!-- Rendered dynamically based on selected tab -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="btn-close-encyclopedia-bottom">CLOSE GUIDE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FLOATING FEEDBACK TOAST / POPUP ==================== -->
+    <div class="feedback-toast" id="feedback-toast">
+      <div class="toast-icon" id="toast-icon">✓</div>
+      <div class="toast-content">
+        <h4 class="toast-title" id="toast-title">Correct Placement!</h4>
+        <p class="toast-msg" id="toast-msg">CPU installed into LGA Socket.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
