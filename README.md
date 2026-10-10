@@ -4,7 +4,9 @@ A simple interactive PC Building Game where players can build their own computer
 
 The game is designed to make learning about computer hardware more fun and interactive.
 
-https://tharushadils.github.io/Inside_the_Computer_-Hardware_Architecture-Simple_Game/
+[Play ](https://tharushadils.github.io/Inside_the_Computer_-Hardware_Architecture-Simple_Game/)
+
+
 
 
 
